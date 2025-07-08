@@ -6,6 +6,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a VRChat world development project using Unity 2022.3.22f1 and VRChat SDK 3.8.2. The project uses UdonSharp for scripting VRChat-compatible behaviors.
 
+## Environment Setup
+
+### Prerequisites
+1. **Unity Hub**: Install Unity 2022.3.22f1 via Unity Hub
+2. **VRChat Creator Companion (VCC)**: For managing VRChat SDK packages
+3. **mise**: For managing development tools and dependencies
+
+### Tool Configuration
+
+#### mise (.mise.toml)
+The project uses [mise](https://mise.jdx.dev/) for consistent development environment:
+- **.NET SDK 6.0.424**: Required for Unity 2022.3 C# development
+- **Node.js 22.17.0 LTS**: For tooling and scripts
+- **openupm-cli**: For managing OpenUPM packages
+
+Install mise and run `mise install` in the project root to set up these tools.
+
+#### Package Management
+
+1. **Unity Package Manager (UPM)**
+   - Core Unity packages are defined in `/Packages/manifest.json`
+   - OpenUPM registry configured for third-party packages
+   - Currently includes NuGetForUnity from OpenUPM
+
+2. **VRChat Package Manager (VPM)**
+   - VRChat SDK packages managed via `/Packages/vpm-manifest.json`
+   - Includes com.vrchat.worlds 3.8.2 and dependencies
+   - Use VRChat Creator Companion for VPM package updates
+
+3. **NuGet for Unity**
+   - Configured via `/Assets/NuGet.config`
+   - Packages installed to `/Assets/Packages/`
+   - Currently no NuGet packages in use (empty packages.config)
+
+### First-time Setup
+```bash
+# 1. Install mise (if not already installed)
+curl https://mise.jdx.dev/install.sh | sh
+
+# 2. Install development tools
+mise install
+
+# 3. Open project in Unity Hub with Unity 2022.3.22f1
+
+# 4. VRChat SDK will be automatically resolved via VPM
+```
+
 ## Key Commands
 
 ### Unity Development
