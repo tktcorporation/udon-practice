@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "components": [
+    "Microsoft.NetCore.Component.Runtime.6.0",
+    "Microsoft.NetCore.Component.SDK",
+    "Microsoft.VisualStudio.Component.Unity",
+    "Microsoft.VisualStudio.Workload.ManagedGame",
+    "Microsoft.Net.Component.4.7.1.TargetingPack",
+    "Microsoft.Net.Component.4.8.SDK"
+  ]
+}

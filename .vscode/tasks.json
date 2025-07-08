@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Regenerate Unity Project Files",
+            "type": "shell",
+            "command": "${workspaceFolder}/regenerate-project-files.sh",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "Restart OmniSharp",
+            "command": "${command:o.restart}",
+            "type": "shell",
+            "problemMatcher": []
+        }
+    ]
+}

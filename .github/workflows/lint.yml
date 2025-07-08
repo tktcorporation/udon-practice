@@ -1,0 +1,32 @@
+# .github/workflows/lint.yml
+# Unity C# Lint with dotnet-format via MISE
+
+name: CSharp Lint
+
+on:
+  push:
+    paths:
+      - '**/*.cs'
+      - '.github/workflows/lint.yml'
+      - '.mise.toml'
+  pull_request:
+    paths:
+      - '**/*.cs'
+      - '.github/workflows/lint.yml'
+      - '.mise.toml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up mise
+        uses: jdx/mise-action@v2
+      - name: Restore local dotnet tools
+        run: mise exec -- dotnet tool restore
+      - name: Run dotnet-format (C# Lint)
+        run: mise exec -- dotnet tool run dotnet-format -- --verify-no-changes --severity warn
+      - name: Run Roslynator analyze (静的解析)
+        run: mise exec -- dotnet tool run roslynator analyze . --msbuild-path $(mise exec -- which msbuild) --verbosity minimal
+      - name: Run dotnet build (型チェック)
+        run: mise exec -- dotnet build --no-restore --nologo --warnaserror
