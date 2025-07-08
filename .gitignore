@@ -116,7 +116,10 @@ Assets/Packages/
 !Assets/packages.config.meta
 !Assets/NuGet.config
 !Assets/NuGet.config.meta
-Packages/
+Packages/*
+!Packages/manifest.json
+!Packages/packages-lock.json
+!Packages/vpm-manifest.json
 
 # This .gitignore file should be placed at the root of your Unity project directory
 #

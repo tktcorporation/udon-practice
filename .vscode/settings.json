@@ -51,5 +51,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "udon-practice.sln"
+    "dotnet.defaultSolution": "udon-practice.sln",
+    "omnisharp.sdkPath": "/home/tktco/.local/share/mise/installs/dotnet/6.0.424/dotnet"
 }
