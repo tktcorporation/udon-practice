@@ -16,18 +16,15 @@ public class InteractiveCube : UdonSharpBehaviour
         // Handle interaction logic here
         Debug.Log("Cube interacted with!");
 
-        try
+        // Example interaction logic
+        Renderer renderer = GetComponent<Renderer>();
+        if (renderer != null)
         {
-            // Example interaction logic
-            Renderer renderer = GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                renderer.material.color = Color.red; // Change color on interaction
-            }
+            renderer.material.color = Color.red; // Change color on interaction
         }
-        catch (System.Exception e)
+        else
         {
-            Debug.LogError("Error during interaction: " + e.Message);
+            Debug.LogWarning("Renderer component not found on InteractiveCube");
         }
     }
 }
