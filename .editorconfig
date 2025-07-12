@@ -117,3 +117,4 @@ dotnet_diagnostic.IDE0044.severity = none # Make field readonly (Unity Serialize
 # StyleCop Analyzers
 dotnet_diagnostic.SA1633.severity = none # File header is missing or not located at the top of the file
 dotnet_diagnostic.SA1101.severity = none # Prefix local calls with this
+dotnet_diagnostic.SA1629.severity = none # Documentation text should end with a period

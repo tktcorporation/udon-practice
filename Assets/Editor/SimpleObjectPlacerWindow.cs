@@ -3,10 +3,12 @@ namespace MyEditor
     using UdonSharpEditor;
     using UnityEditor;
     using UnityEngine;
+    using VRC.Udon;
+    using VRC.Udon.Common;
 
     /// <summary>
     /// Unity エディタ拡張：インタラクティブオブジェクト配置ツール
-    /// ワンクリックで原点にインタラクト可能なキューブを配置するための開発支援ツール.
+    /// ワンクリックで原点に様々な機能を持つキューブを配置するための開発支援ツール.
     /// </summary>
     /// <remarks>
     /// 【このツールを作った理由】
@@ -50,38 +52,11 @@ namespace MyEditor
         /// 生成されたキューブは VRChat 内でインタラクト可能になり、
         /// プレイヤーがインタラクトすると色が赤に変わります.
         /// </remarks>
-        [MenuItem("Tools/Place Cube At Origin")]
-        public static void PlaceCubeAtOrigin()
+        [MenuItem("Tools/Place Interactive Cube At Origin")]
+        public static void PlaceInteractiveCubeAtOrigin()
         {
-            // ========== キューブの生成 ==========
-            // GameObject.CreatePrimitive は Unity が提供する基本形状を生成するメソッド
-            // PrimitiveType.Cube を指定することで、1x1x1 サイズのキューブを作成
-            // なぜキューブを選んだか：最も基本的な形状で、衝突判定のテストなどに便利なため
-            GameObject newObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-            // 生成したオブジェクトに分かりやすい名前を設定
-            // デフォルトでは "Cube" という名前になるが、
-            // このツールで配置したことが分かるように "PlacedCube" に変更
-            newObject.name = "PlacedCube";
-
-            // ========== Transform の設定 ==========
-            // Transform は Unity のすべてのゲームオブジェクトが持つコンポーネントで、
-            // 位置（position）、回転（rotation）、大きさ（scale）を管理します
-
-            // 位置を原点（0, 0, 0）に設定
-            // Vector3.zero は new Vector3(0, 0, 0) の省略形
-            // VRChat ワールドでは原点が重要な基準点となるため、ここに配置
-            newObject.transform.position = Vector3.zero;
-
-            // 回転をリセット（回転なし）
-            // Quaternion.identity は「回転なし」を表す特別な値
-            // 初心者向け説明：オブジェクトがまっすぐ正面を向いている状態
-            newObject.transform.rotation = Quaternion.identity;
-
-            // 大きさを標準サイズ（1, 1, 1）に設定
-            // Vector3.one は new Vector3(1, 1, 1) の省略形
-            // これにより、キューブは 1メートル × 1メートル × 1メートル のサイズになる
-            newObject.transform.localScale = Vector3.one;
+            // 基本のキューブを作成
+            GameObject newObject = CreateBasicCube("InteractiveCube");
 
             // ========== UdonSharp の設定 ==========
             // UdonSharp は VRChat で使用されるスクリプティングシステムで、
@@ -98,39 +73,116 @@ namespace MyEditor
             // 2. UdonSharp により、使い慣れた C# 構文で VRChat 用のスクリプトが書ける
             // 3. インタラクト機能などの VRChat 特有の機能が簡単に実装できる
 
-            // ========== コライダーの設定 ==========
-            // インタラクトを可能にするため、コライダーが必要
-            // CreatePrimitive で作成したキューブには既に BoxCollider が付いているが、
-            // 念のため確認して設定を調整
-            BoxCollider collider = newObject.GetComponent<BoxCollider>();
-            if (collider != null)
-            {
-                // コライダーのトリガー設定
-                // isTrigger = false にすることで、物理的な衝突も検知できる
-                collider.isTrigger = false;
-            }
-
             // ========== エディタ機能との統合 ==========
-
-            // Undo（元に戻す）機能への対応
-            // Ctrl+Z でこの操作を取り消せるようにする
-            // "Place Cube At Origin" は Undo 履歴に表示される操作名
-            Undo.RegisterCreatedObjectUndo(newObject, "Place Cube At Origin");
-
-            // 生成したオブジェクトを選択状態にする
-            // これにより、インスペクターウィンドウに詳細が表示され、
-            // すぐに編集を開始できる
-            Selection.activeGameObject = newObject;
-
-            // オブジェクトを「変更済み」としてマーク
-            // これにより、シーンの保存時に確実に保存される
-            // Unity はこのマークがないと、変更を検知できない場合がある
-            EditorUtility.SetDirty(newObject);
+            FinalizeObject(newObject, "Place Interactive Cube");
 
             // コンソールウィンドウに詳細メッセージを表示
             // 開発者に操作が成功したことと、インタラクト機能があることを通知
             Debug.Log("インタラクト可能なキューブを原点に配置しました。" +
                       "プレイヤーがインタラクトすると色が赤に変わります。");
+        }
+
+        /// <summary>
+        /// Unity エディタのメニューバーに「Place Player Detector Cube」を追加し、
+        /// クリック時に原点にプレイヤー検出機能を持つキューブを配置する.
+        /// </summary>
+        /// <remarks>
+        /// 【実行の流れ】
+        /// 1. ユーザーがメニューバーの「Tools」→「Place Player Detector Cube」をクリック
+        /// 2. このメソッドが自動的に呼び出される
+        /// 3. キューブが原点に生成される
+        /// 4. PlayerDetector (UdonSharp) スクリプトがアタッチされる
+        /// 5. 生成されたキューブが選択状態になる
+        ///
+        /// 【プレイヤー検出機能】
+        /// 生成されたキューブは VRChat 内でプレイヤーを検出し、
+        /// プレイヤーとの距離に応じて色が変化します（近い：赤、遠い：青）.
+        /// </remarks>
+        [MenuItem("Tools/Place Player Detector Cube")]
+        public static void PlacePlayerDetectorCube()
+        {
+            // 基本のキューブを作成
+            GameObject newObject = CreateBasicCube("PlayerDetectorCube");
+
+            // ========== PlayerDetector の設定 ==========
+            // PlayerDetector スクリプトをアタッチ
+            // このスクリプトにより、プレイヤーの接近を検出できるようになる
+            
+            // UdonBehaviourを追加
+            var udonBehaviour = newObject.AddComponent<VRC.Udon.UdonBehaviour>();
+            
+            // PlayerDetectorのUdonSharpProgramAssetを検索して設定
+            // なぜ必要か：UdonSharpはC#をUdonにコンパイルするため、
+            // ProgramAssetを通じてコンパイル済みコードを参照する必要がある
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("t:UdonSharpProgramAsset PlayerDetector");
+            if (guids.Length > 0)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                var programAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<UdonSharp.UdonSharpProgramAsset>(path);
+                if (programAsset != null)
+                {
+                    udonBehaviour.AssignProgramAndVariables(programAsset.SerializedProgramAsset, new VRC.Udon.Common.UdonVariableTable());
+                    udonBehaviour.programSource = programAsset;
+                }
+                else
+                {
+                    Debug.LogWarning("PlayerDetectorのProgramAssetが見つかりません。");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("PlayerDetectorのUdonSharpProgramAssetが見つかりません。Assets/Scripts/PlayerDetector.assetを確認してください。");
+            }
+
+            // ========== エディタ機能との統合 ==========
+            FinalizeObject(newObject, "Place Player Detector Cube");
+
+            // コンソールウィンドウに詳細メッセージを表示
+            Debug.Log("プレイヤー検出キューブを原点に配置しました。" +
+                      "プレイヤーが近づくと距離に応じて色が変化します。");
+        }
+
+        /// <summary>
+        /// 基本的なキューブを生成し、共通の設定を行う
+        /// </summary>
+        /// <param name="objectName">生成するオブジェクトの名前</param>
+        /// <returns>生成されたGameObject</returns>
+        private static GameObject CreateBasicCube(string objectName)
+        {
+            // ========== キューブの生成 ==========
+            GameObject newObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            newObject.name = objectName;
+
+            // ========== Transform の設定 ==========
+            newObject.transform.position = Vector3.zero;
+            newObject.transform.rotation = Quaternion.identity;
+            newObject.transform.localScale = Vector3.one;
+
+            // ========== コライダーの設定 ==========
+            BoxCollider collider = newObject.GetComponent<BoxCollider>();
+            if (collider != null)
+            {
+                collider.isTrigger = false;
+            }
+
+            return newObject;
+        }
+
+        /// <summary>
+        /// オブジェクトの生成を完了し、エディタ機能と統合する
+        /// </summary>
+        /// <param name="obj">処理対象のGameObject</param>
+        /// <param name="undoName">Undo履歴に表示される操作名</param>
+        private static void FinalizeObject(GameObject obj, string undoName)
+        {
+            // Undo（元に戻す）機能への対応
+            Undo.RegisterCreatedObjectUndo(obj, undoName);
+
+            // 生成したオブジェクトを選択状態にする
+            Selection.activeGameObject = obj;
+
+            // オブジェクトを「変更済み」としてマーク
+            EditorUtility.SetDirty(obj);
         }
     }
 }
