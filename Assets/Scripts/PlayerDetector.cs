@@ -1,3 +1,4 @@
+using TMPro;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,6 +53,12 @@ public class PlayerDetector : UdonSharpBehaviour
     [SerializeField] private Text playerNameText;
 
     /// <summary>
+    /// プレイヤー名を表示するTextMeshPro（オプション）
+    /// VRChatTextCreatorで作成したテキストを使用可能
+    /// </summary>
+    [SerializeField] private TextMeshPro playerNameTextMeshPro;
+
+    /// <summary>
     /// デバッグログを表示するかどうか
     /// 開発中はtrueにして動作を確認
     /// </summary>
@@ -59,7 +66,7 @@ public class PlayerDetector : UdonSharpBehaviour
     [SerializeField] private bool showDebugInfo = true;
 
     // ========== プライベート変数 ==========
-    
+
     /// <summary>
     /// このオブジェクトのRenderer（色変更用）
     /// </summary>
@@ -84,7 +91,7 @@ public class PlayerDetector : UdonSharpBehaviour
         // Rendererコンポーネントを取得
         // なぜ必要か：オブジェクトの色を変更するため
         objectRenderer = GetComponent<Renderer>();
-        
+
         if (objectRenderer != null)
         {
             // 元の色を保存
@@ -101,6 +108,12 @@ public class PlayerDetector : UdonSharpBehaviour
         {
             playerNameText.text = "プレイヤーを検出中...";
         }
+
+        // TextMeshProの初期化
+        if (playerNameTextMeshPro != null)
+        {
+            playerNameTextMeshPro.text = "プレイヤーを検出中...";
+        }
     }
 
     /// <summary>
@@ -111,7 +124,7 @@ public class PlayerDetector : UdonSharpBehaviour
     {
         // 最も近いプレイヤーを検出
         VRCPlayerApi nearestPlayer = FindNearestPlayer();
-        
+
         if (nearestPlayer != null)
         {
             // プレイヤーが見つかった場合の処理
@@ -178,27 +191,43 @@ public class PlayerDetector : UdonSharpBehaviour
             // 距離を0-1の範囲に正規化
             // Mathf.InverseLerpは値を指定範囲内での割合に変換する
             float normalizedDistance = Mathf.InverseLerp(minDistance, maxDistance, currentDistance);
-            
+
             // 色を補間（近い：赤、遠い：青）
             // Color.Lerpは2つの色を指定の割合で混ぜる
             Color targetColor = Color.Lerp(Color.red, Color.blue, normalizedDistance);
-            
+
             // 色を適用
             objectRenderer.material.color = targetColor;
         }
 
         // ========== プレイヤー名の表示 ==========
+        string playerInfo = $"プレイヤー: {player.displayName}\n距離: {currentDistance:F1}m";
+
+        // ローカルプレイヤー（自分）の場合は特別な表示
+        if (player.isLocal)
+        {
+            playerInfo += " (あなた)";
+        }
+
+        // 通常のTextに表示
         if (playerNameText != null)
         {
-            string playerInfo = $"プレイヤー: {player.displayName}\n距離: {currentDistance:F1}m";
-            
-            // ローカルプレイヤー（自分）の場合は特別な表示
-            if (player.isLocal)
-            {
-                playerInfo += " (あなた)";
-            }
-            
             playerNameText.text = playerInfo;
+        }
+
+        // TextMeshProに表示
+        if (playerNameTextMeshPro != null)
+        {
+            playerNameTextMeshPro.text = playerInfo;
+
+            // TextMeshProの追加機能：距離に応じて文字サイズを変更
+            // 近いほど大きく表示（5～10の範囲）
+            float normalizedDistance = Mathf.InverseLerp(minDistance, maxDistance, currentDistance);
+            // playerNameTextMeshPro.fontSize = Mathf.Lerp(10f, 5f, normalizedDistance);
+
+            // 色も距離に応じて変更（オプション）
+            // 近い：赤、遠い：白
+            playerNameTextMeshPro.color = Color.Lerp(Color.red, Color.white, normalizedDistance);
         }
 
         // ========== デバッグ情報 ==========
@@ -226,6 +255,14 @@ public class PlayerDetector : UdonSharpBehaviour
             playerNameText.text = "プレイヤーが検出範囲内にいません";
         }
 
+        // TextMeshProもリセット
+        if (playerNameTextMeshPro != null)
+        {
+            playerNameTextMeshPro.text = "プレイヤーが検出範囲内にいません";
+            // playerNameTextMeshPro.fontSize = 5f;  // デフォルトサイズに戻す
+            playerNameTextMeshPro.color = Color.white;  // デフォルト色に戻す
+        }
+
         currentDistance = float.MaxValue;
     }
 
@@ -237,10 +274,10 @@ public class PlayerDetector : UdonSharpBehaviour
     {
         // 最小距離は0以上
         minDistance = Mathf.Max(0f, minDistance);
-        
+
         // 最大距離は最小距離より大きく
         maxDistance = Mathf.Max(minDistance + 0.1f, maxDistance);
-        
+
         // 検出範囲は最大距離以上
         detectionRange = Mathf.Max(maxDistance, detectionRange);
     }

@@ -93,6 +93,7 @@ namespace UdonSharpLinterCLI
                 CheckStaticFields(root, filePath, errors);
                 CheckNestedTypes(root, filePath, errors);
                 CheckNetworkCallableMethods(root, filePath, errors);
+                CheckUnexposedAPIs(root, filePath, errors);
                 
                 // Report errors
                 foreach (var error in errors)
@@ -448,6 +449,102 @@ namespace UdonSharpLinterCLI
                         Severity = DiagnosticSeverity.Error,
                         Code = 13
                     });
+                }
+            }
+        }
+
+        private static void CheckUnexposedAPIs(SyntaxNode root, string filePath, List<LintError> errors)
+        {
+            // TextMeshPro未公開APIのリスト
+            var unexposedTextMeshProAPIs = new HashSet<string>
+            {
+                "fontSize", "fontSizeMin", "fontSizeMax", "fontStyle", "fontWeight",
+                "enableAutoSizing", "fontSharedMaterial", "fontSharedMaterials", 
+                "fontMaterial", "fontMaterials", "maskable", "isVolumetricText",
+                "margin", "textBounds", "preferredWidth", "preferredHeight",
+                "flexibleWidth", "flexibleHeight", "minWidth", "minHeight",
+                "maxWidth", "maxHeight", "layoutPriority", "isUsingLegacyAnimationComponent",
+                "isVolumetricText", "onCullStateChanged", "maskOffset", "renderMode",
+                "geometrySortingOrder", "vertexBufferAutoSizeReduction", "firstVisibleCharacter",
+                "maxVisibleCharacters", "maxVisibleWords", "maxVisibleLines", "useMaxVisibleDescender",
+                "pageToDisplay", "linkedTextComponent", "isTextOverflowing", "firstOverflowCharacterIndex",
+                "isTextTruncated", "parseCtrlCharacters", "isOrthographic", "enableCulling",
+                "ignoreVisibility", "horizontalMapping", "verticalMapping", "mappingUvLineOffset",
+                "enableWordWrapping", "wordWrapingRatios", "overflowMode", "isTextOverflowing",
+                "textInfo", "havePropertiesChanged", "isUsingBold", "spriteAnimator",
+                "layoutElement", "ignoreRectMaskCulling", "isOverlay"
+            };
+
+            // メンバーアクセス式を検出
+            var memberAccesses = root.DescendantNodes().OfType<MemberAccessExpressionSyntax>();
+            
+            foreach (var memberAccess in memberAccesses)
+            {
+                // TextMeshProまたはTextMeshProUGUIのインスタンスへのアクセスをチェック
+                var memberName = memberAccess.Name.ToString();
+                
+                if (unexposedTextMeshProAPIs.Contains(memberName))
+                {
+                    // 親の型がTextMeshProかどうかを確認（簡易的なチェック）
+                    var expression = memberAccess.Expression.ToString();
+                    
+                    // TextMeshProの変数への可能性が高い場合
+                    if (expression.ToLower().Contains("textmeshpro") || 
+                        expression.ToLower().Contains("tmp") ||
+                        expression.ToLower().Contains("text"))
+                    {
+                        var lineSpan = memberAccess.GetLocation().GetLineSpan();
+                        errors.Add(new LintError
+                        {
+                            FilePath = filePath,
+                            Line = lineSpan.StartLinePosition.Line + 1,
+                            Column = lineSpan.StartLinePosition.Character + 1,
+                            Message = $"Method is not exposed to Udon: '{expression}.{memberName}'",
+                            Severity = DiagnosticSeverity.Error,
+                            Code = 14
+                        });
+                    }
+                }
+            }
+
+            // その他の一般的な未公開APIもチェック
+            CheckGeneralUnexposedAPIs(root, filePath, errors);
+        }
+
+        private static void CheckGeneralUnexposedAPIs(SyntaxNode root, string filePath, List<LintError> errors)
+        {
+            // 一般的な未公開メソッド/プロパティのチェック
+            var bannedMethods = new Dictionary<string, string>
+            {
+                { "System.Reflection", "Reflection APIs are not exposed to Udon" },
+                { "System.Threading", "Threading APIs are not exposed to Udon" },
+                { "System.IO.File", "File I/O APIs are not exposed to Udon" },
+                { "System.Net", "Networking APIs are not exposed to Udon" },
+                { "UnityEngine.Application.OpenURL", "Application.OpenURL is not exposed to Udon" },
+                { "UnityEngine.Application.Quit", "Application.Quit is not exposed to Udon" }
+            };
+
+            var invocations = root.DescendantNodes().OfType<InvocationExpressionSyntax>();
+            
+            foreach (var invocation in invocations)
+            {
+                var invocationString = invocation.ToString();
+                
+                foreach (var bannedMethod in bannedMethods)
+                {
+                    if (invocationString.Contains(bannedMethod.Key))
+                    {
+                        var lineSpan = invocation.GetLocation().GetLineSpan();
+                        errors.Add(new LintError
+                        {
+                            FilePath = filePath,
+                            Line = lineSpan.StartLinePosition.Line + 1,
+                            Column = lineSpan.StartLinePosition.Character + 1,
+                            Message = bannedMethod.Value,
+                            Severity = DiagnosticSeverity.Error,
+                            Code = 14
+                        });
+                    }
                 }
             }
         }
