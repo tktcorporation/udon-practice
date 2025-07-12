@@ -10,7 +10,7 @@ node = "24"
 
 [tasks.lint]
 run = """
-mise lint-dotnet && mise lint-dotnet-editor
+mise lint-dotnet && mise lint-dotnet-editor && mise lint-udonsharp
 """
 
 [tasks.lint-dotnet]
@@ -23,4 +23,10 @@ dotnet build Assembly-CSharp.csproj
 description = "Run .NET code analysis for Unity Editor scripts"
 run = """
 dotnet build Assembly-CSharp-Editor.csproj
+"""
+
+[tasks.lint-udonsharp]
+description = "Run UdonSharp specific linter"
+run = """
+dotnet run --project Tools/UdonSharpLinterCLI/UdonSharpLinterCLI.csproj -- Assets --exclude-test-scripts
 """

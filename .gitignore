@@ -228,3 +228,9 @@ InitTestScene*.unity*
 # VRChat
 /Packages/com.vrchat.*
 /Assets/UdonSharp/
+
+# Tools build artifacts
+Tools/**/bin/
+Tools/**/obj/
+ClientSimStorage/PlayerData/PlayerData_1_VRCDefaultWorldScene.json
+ClientSimStorage/PlayerObjects/PlayerObject_1_VRCDefaultWorldScene.json

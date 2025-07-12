@@ -48,7 +48,8 @@
       "Bash(mise:*)",
       "WebFetch(domain:mise.jdx.dev)",
       "Bash(mkdir:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(dotnet format:*)"
     ],
     "deny": []
   },
