@@ -9,6 +9,18 @@ node = "24"
 "npm:@upstash/context7-mcp" = "latest"
 
 [tasks.lint]
-description = "Run Unity C# code analysis with Roslyn Analyzers"
-run = "powershell -ExecutionPolicy Bypass -File unity-roslyn-lint.ps1"
+run = """
+mise lint-dotnet && mise lint-dotnet-editor
+"""
 
+[tasks.lint-dotnet]
+description = "Run .NET code analysis for Unity scripts"
+run = """
+dotnet build Assembly-CSharp.csproj
+"""
+
+[tasks.lint-dotnet-editor]
+description = "Run .NET code analysis for Unity Editor scripts"
+run = """
+dotnet build Assembly-CSharp-Editor.csproj
+"""

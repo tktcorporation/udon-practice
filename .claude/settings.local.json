@@ -47,7 +47,8 @@
       "mcp__unity-natural-mcp__remove_component",
       "Bash(mise:*)",
       "WebFetch(domain:mise.jdx.dev)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": []
   },
