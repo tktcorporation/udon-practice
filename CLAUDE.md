@@ -1,116 +1,179 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、このリポジトリでコードを扱う際のClaude Code (claude.ai/code)へのガイダンスを提供します。
 
-## Project Overview
+## プロジェクト概要
 
-This is a VRChat world development project using Unity 2022.3.22f1 and VRChat SDK 3.8.2. The project uses UdonSharp for scripting VRChat-compatible behaviors.
+Unity 2022.3.22f1とVRChat SDK 3.8.2を使用したVRChatワールド開発プロジェクトです。VRChat互換の動作をスクリプト化するためにUdonSharpを使用しています。
 
-## Environment Setup
+## 環境構築
 
-### Prerequisites
-1. **Unity Hub**: Install Unity 2022.3.22f1 via Unity Hub
-2. **VRChat Creator Companion (VCC)**: For managing VRChat SDK packages
-3. **mise**: For managing development tools and dependencies
-
-### Tool Configuration
+### ツール設定
 
 #### mise (.mise.toml)
-The project uses [mise](https://mise.jdx.dev/) for consistent development environment:
-- **.NET SDK 6.0.424**: Required for Unity 2022.3 C# development
-- **Node.js 22.17.0 LTS**: For tooling and scripts
-- **openupm-cli**: For managing OpenUPM packages
+プロジェクトは一貫した開発環境のために[mise](https://mise.jdx.dev/)を使用します：
+- **.NET SDK 6.0.424**: Unity 2022.3 C#開発に必要
+- **Node.js 22.17.0 LTS**: ツールとスクリプト用
+- **openupm-cli**: OpenUPMパッケージ管理用
 
-Install mise and run `mise install` in the project root to set up these tools.
-
-#### Package Management
+#### パッケージ管理
 
 1. **Unity Package Manager (UPM)**
-   - Core Unity packages are defined in `/Packages/manifest.json`
-   - OpenUPM registry configured for third-party packages
-   - Currently includes NuGetForUnity from OpenUPM
+   - コアUnityパッケージは`/Packages/manifest.json`で定義
+   - サードパーティパッケージ用にOpenUPMレジストリを設定
+   - 現在OpenUPMからNuGetForUnityを含む
 
 2. **VRChat Package Manager (VPM)**
-   - VRChat SDK packages managed via `/Packages/vpm-manifest.json`
-   - Includes com.vrchat.worlds 3.8.2 and dependencies
-   - Use VRChat Creator Companion for VPM package updates
+   - VRChat SDKパッケージは`/Packages/vpm-manifest.json`で管理
+   - com.vrchat.worlds 3.8.2と依存関係を含む
+   - VPMパッケージの更新にはVRChat Creator Companionを使用
 
 3. **NuGet for Unity**
-   - Configured via `/Assets/NuGet.config`
-   - Packages installed to `/Assets/Packages/`
-   - Currently no NuGet packages in use (empty packages.config)
+   - `/Assets/NuGet.config`で設定
+   - パッケージは`/Assets/Packages/`にインストール
+   - 現在NuGetパッケージは未使用（空のpackages.config）
 
-### First-time Setup
-```bash
-# 1. Install mise (if not already installed)
-curl https://mise.jdx.dev/install.sh | sh
+## 主要コマンド
 
-# 2. Install development tools
-mise install
+### Unity開発
+- **Unityで開く**: Unity Hubを使用してUnity 2022.3.22f1でプロジェクトを開く
+- **Play Modeテスト**: VRChat ClientSimでUnityのPlayモードを使用してローカルテスト
+- **VRChatワールドビルド**: File → Build Settings → Build（VRChat SDKパネルの設定が必要）
 
-# 3. Open project in Unity Hub with Unity 2022.3.22f1
+### コード品質
+- **Lintチェック**: 変更をコミットする前に`mise lint`を実行
+- **タスク完了**: 開発タスクを完了する際は必ず`mise lint`が成功することを確認
 
-# 4. VRChat SDK will be automatically resolved via VPM
-```
+### Git操作
+- リポジトリにはUnity/VRChat開発用の包括的な`.gitignore`がある
+- Unityメタファイルは追跡される（Unityプロジェクトに必要）
 
-## Key Commands
+## アーキテクチャと構造
 
-### Unity Development
-- **Open in Unity**: Use Unity Hub to open the project with Unity 2022.3.22f1
-- **Play Mode Testing**: Use Unity's Play mode with VRChat ClientSim for local testing
-- **Build VRChat World**: File → Build Settings → Build (requires VRChat SDK panel configuration)
+### コアディレクトリ
+- `/Assets/` - すべてのプロジェクトアセットとスクリプト
+- `/Assets/Scenes/` - Unityシーン（メインシーン: VRCDefaultWorldScene.unity）
+- `/Assets/UdonSharp/UtilityScripts/` - UdonSharp動作スクリプト
+- `/Assets/SerializedUdonPrograms/` - コンパイル済みUdonプログラム（自動生成）
 
-### Code Quality
-- **Lint Check**: Run `mise lint` before committing changes
-- **Task Completion**: Always ensure `mise lint` passes when completing any development task
+### 主要スクリプトタイプ
+- **PlayerModSetter.cs**: プレイヤー移動の変更（ジャンプ、速度、重力）
+- **InteractToggle.cs**: インタラクティブオブジェクトの切り替え
+- **GlobalToggleObject.cs**: ネットワーク同期オブジェクト状態
+- **MasterToggleObject.cs**: マスター専用コントロール
 
-### Git Operations
-- The repository has a comprehensive `.gitignore` for Unity/VRChat development
-- Unity meta files are tracked (required for Unity projects)
+## VRChat固有の考慮事項
 
-## Architecture & Structure
+1. **ネットワーキング**: ネットワーク動作には適切な`BehaviourSyncMode`を使用
+2. **Player API**: `VRCPlayerApi`を通じてプレイヤーデータにアクセス
+3. **インタラクション**: プレイヤーインタラクションには`Interact()`メソッドを使用
+4. **オーナーシップ**: ネットワークオブジェクトのオーナーシップは`Networking.SetOwner()`で処理
 
-### Core Directories
-- `/Assets/` - All project assets and scripts
-- `/Assets/Scenes/` - Unity scenes (main scene: VRCDefaultWorldScene.unity)
-- `/Assets/UdonSharp/UtilityScripts/` - UdonSharp behavior scripts
-- `/Assets/SerializedUdonPrograms/` - Compiled Udon programs (auto-generated)
+## Context7 MCP - ドキュメント参照機能
 
-### UdonSharp Scripts Pattern
-All scripts follow this structure:
+Claude CodeはContext7 MCP (Model Context Protocol)を通じて、VRChatの最新ドキュメントやAPIリファレンスにアクセスできます。これにより、以下のような情報を取得できます：
+
+- **VRChat公式ドキュメント**: 最新のAPIリファレンス、UdonSharpガイド、ネットワーキング仕様など
+- **Unity公式ドキュメント**: Unity 2022.3の最新機能、ベストプラクティス
+- **その他の技術ドキュメント**: 関連するライブラリやツールの最新情報
+
+### 使用方法
+開発中に以下のような場面で積極的に活用してください：
+- 新しいAPIや機能について調べる必要がある時
+- エラーメッセージや警告の解決方法を探す時
+- ベストプラクティスや推奨される実装パターンを確認する時
+- LLMの学習データに含まれていない最新の情報が必要な時
+
+この機能により、常に最新かつ正確な情報に基づいた開発が可能になります。
+
+## コードドキュメント化ルール
+
+このプロジェクトはUnity C#初心者向けに作成されているため、すべてのコードには詳細なドキュメントが必要です。以下のルールに従ってください：
+
+### 必須ドキュメント項目
+
+1. **コードの意図と目的**
+   - なぜそのコードを書いたのか
+   - 何を実現しようとしているのか
+   - どのような問題を解決するのか
+
+2. **動作の詳細説明**
+   - コードによって何が起こるのか
+   - 実行順序とその理由
+   - 予期される結果と副作用
+
+3. **関数・メソッドの説明**
+   - 関数の目的と役割
+   - パラメータの詳細な説明
+   - 戻り値の意味と使用方法
+   - 呼び出しタイミングと条件
+
+4. **クラスの設計意図**
+   - クラスの存在理由と責務
+   - 他のクラスとの関係性
+   - 使用場面とライフサイクル
+
+5. **全体構造の説明**
+   - システム全体における位置づけ
+   - 他のコンポーネントとの連携方法
+   - データフローと処理の流れ
+
+### ドキュメント記述例
+
 ```csharp
-using UdonSharp;
-using UnityEngine;
-using VRC.SDKBase;
-using VRC.Udon;
-
-namespace UdonSharp.Examples.Utilities
+/// <summary>
+/// プレイヤーのジャンプ機能を制御するクラス
+/// VRChat内でプレイヤーがインタラクトボタンを押すとジャンプできるようにする
+/// </summary>
+/// <remarks>
+/// 使用理由：
+/// - VRChatではデフォルトのジャンプがないため、カスタム実装が必要
+/// - インタラクトボタンを使うことで、VRコントローラーでも操作可能
+/// 
+/// 動作の流れ：
+/// 1. プレイヤーがオブジェクトに近づく
+/// 2. インタラクトボタンを押す
+/// 3. Interact()メソッドが呼ばれる
+/// 4. プレイヤーの上方向に力を加える
+/// 5. 結果：プレイヤーがジャンプする
+/// </remarks>
+public class JumpPad : UdonSharpBehaviour
 {
-    [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class ScriptName : UdonSharpBehaviour
+    /// <summary>
+    /// ジャンプの強さ（単位：Unity物理エンジンの力）
+    /// 大きいほど高くジャンプする（推奨値：5-15）
+    /// </summary>
+    [SerializeField] private float jumpPower = 10f;
+    
+    /// <summary>
+    /// プレイヤーがインタラクトした時に呼ばれる
+    /// VRChatの仕様により、このメソッド名は固定
+    /// </summary>
+    public override void Interact()
     {
-        // Implementation
+        // インタラクトしたプレイヤーを取得
+        // なぜ必要か：ジャンプさせる対象を特定するため
+        VRCPlayerApi player = Networking.LocalPlayer;
+        
+        // プレイヤーに上向きの速度を設定
+        // Vector3.upは(0,1,0)を表し、真上方向
+        // jumpPowerを掛けることで、ジャンプの高さを調整
+        player.SetVelocity(Vector3.up * jumpPower);
     }
 }
 ```
 
-### Key Script Types
-- **PlayerModSetter.cs**: Modifies player movement (jump, speed, gravity)
-- **InteractToggle.cs**: Interactive object toggling
-- **GlobalToggleObject.cs**: Network-synchronized object states
-- **MasterToggleObject.cs**: Master-only controls
+### 重要な注意事項
 
-## VRChat-Specific Considerations
+- **初心者向けを意識**：専門用語は避けるか、使う場合は必ず説明を追加
+- **なぜ？を説明**：「なぜその方法を選んだのか」を明確に記述
+- **具体例を提供**：抽象的な説明より、具体的な使用例を示す
+- **エラー処理も説明**：エラーが起きる可能性とその対処法も記載
 
-1. **Networking**: Use appropriate `BehaviourSyncMode` for networked behaviors
-2. **Player API**: Access player data through `VRCPlayerApi`
-3. **Interactions**: Use `Interact()` method for player interactions
-4. **Ownership**: Handle ownership for networked objects with `Networking.SetOwner()`
+## 開発メモ
 
-## Development Notes
-
-- **IMPORTANT**: Always run `mise lint` and ensure it passes before marking any task as complete
-- Always test multiplayer functionality with ClientSim
-- Performance is critical for VR - optimize draw calls and polygon counts
-- Use Unity Profiler for performance analysis
-- Follow VRChat's community guidelines for world content
+- **重要**: タスクを完了としてマークする前に必ず`mise lint`を実行し、成功することを確認
+- マルチプレイヤー機能は必ずClientSimでテスト
+- VRではパフォーマンスが重要 - ドローコールとポリゴン数を最適化
+- パフォーマンス分析にはUnity Profilerを使用
+- ワールドコンテンツにはVRChatのコミュニティガイドラインに従う
