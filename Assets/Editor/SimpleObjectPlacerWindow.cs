@@ -1,11 +1,12 @@
 namespace MyEditor
 {
+    using UdonSharpEditor;
     using UnityEditor;
     using UnityEngine;
 
     /// <summary>
-    /// Unity エディタ拡張：シンプルなオブジェクト配置ツール
-    /// ワンクリックで原点にキューブを配置するための開発支援ツール.
+    /// Unity エディタ拡張：インタラクティブオブジェクト配置ツール
+    /// ワンクリックで原点にインタラクト可能なキューブを配置するための開発支援ツール.
     /// </summary>
     /// <remarks>
     /// 【このツールを作った理由】
@@ -26,7 +27,7 @@ namespace MyEditor
     {
         /// <summary>
         /// Unity エディタのメニューバーに「Place Cube At Origin」を追加し、
-        /// クリック時に原点にキューブを配置する.
+        /// クリック時に原点にインタラクト可能なキューブを配置する.
         /// </summary>
         /// <remarks>
         /// 【MenuItem 属性の役割】
@@ -42,7 +43,12 @@ namespace MyEditor
         /// 1. ユーザーがメニューバーの「Tools」→「Place Cube At Origin」をクリック
         /// 2. このメソッドが自動的に呼び出される
         /// 3. キューブが原点に生成される
-        /// 4. 生成されたキューブが選択状態になる.
+        /// 4. InteractiveCube (UdonSharp) スクリプトがアタッチされる
+        /// 5. 生成されたキューブが選択状態になる
+        ///
+        /// 【インタラクト機能】
+        /// 生成されたキューブは VRChat 内でインタラクト可能になり、
+        /// プレイヤーがインタラクトすると色が赤に変わります.
         /// </remarks>
         [MenuItem("Tools/Place Cube At Origin")]
         public static void PlaceCubeAtOrigin()
@@ -77,6 +83,33 @@ namespace MyEditor
             // これにより、キューブは 1メートル × 1メートル × 1メートル のサイズになる
             newObject.transform.localScale = Vector3.one;
 
+            // ========== UdonSharp の設定 ==========
+            // UdonSharp は VRChat で使用されるスクリプティングシステムで、
+            // C# のコードを Udon（VRChat の実行環境）用にコンパイルします
+
+            // InteractiveCube スクリプトをアタッチ
+            // このスクリプトにより、プレイヤーがキューブにインタラクトできるようになる
+            // AddUdonSharpComponent は UdonSharp 専用のメソッドで、
+            // 通常の AddComponent とは異なり、UdonBehaviour も自動的に設定される
+            newObject.AddUdonSharpComponent<InteractiveCube>();
+
+            // なぜ UdonSharp を使うのか：
+            // 1. VRChat ではセキュリティ上の理由から、通常の C# スクリプトは実行できない
+            // 2. UdonSharp により、使い慣れた C# 構文で VRChat 用のスクリプトが書ける
+            // 3. インタラクト機能などの VRChat 特有の機能が簡単に実装できる
+
+            // ========== コライダーの設定 ==========
+            // インタラクトを可能にするため、コライダーが必要
+            // CreatePrimitive で作成したキューブには既に BoxCollider が付いているが、
+            // 念のため確認して設定を調整
+            BoxCollider collider = newObject.GetComponent<BoxCollider>();
+            if (collider != null)
+            {
+                // コライダーのトリガー設定
+                // isTrigger = false にすることで、物理的な衝突も検知できる
+                collider.isTrigger = false;
+            }
+
             // ========== エディタ機能との統合 ==========
 
             // Undo（元に戻す）機能への対応
@@ -94,9 +127,10 @@ namespace MyEditor
             // Unity はこのマークがないと、変更を検知できない場合がある
             EditorUtility.SetDirty(newObject);
 
-            // コンソールウィンドウにメッセージを表示
-            // 開発者に操作が成功したことを通知
-            Debug.Log("Cubeを原点に配置しました");
+            // コンソールウィンドウに詳細メッセージを表示
+            // 開発者に操作が成功したことと、インタラクト機能があることを通知
+            Debug.Log("インタラクト可能なキューブを原点に配置しました。" +
+                      "プレイヤーがインタラクトすると色が赤に変わります。");
         }
     }
 }
