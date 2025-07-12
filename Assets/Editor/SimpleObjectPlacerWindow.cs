@@ -1,31 +1,102 @@
-using UnityEngine;
-using UnityEditor;
-using VRC.Udon;
-using UdonSharp;
-using UdonSharpEditor;
-
-// Unityエディタ拡張ウィンドウのクラス
-public class SimpleObjectPlacerWindow : EditorWindow
+namespace MyEditor
 {
-
-    // Window instance
-    private static SimpleObjectPlacerWindow window;
-
-    // Interaction settings
-    private bool addInteraction = true;
-    private Color[] interactionColors = new Color[] { Color.red, Color.blue, Color.green, Color.yellow, Color.magenta };
-    private float scaleMultiplier = 1.5f;
-    private float rotationSpeed = 90f;
-    private AudioClip interactionSound;
+    using UnityEditor;
+    using UnityEngine;
 
     /// <summary>
-    /// Creates and shows the SimpleObjectPlacerWindow.
-    /// * This method is called when the user selects the menu item.
+    /// Unity エディタ拡張：シンプルなオブジェクト配置ツール
+    /// ワンクリックで原点にキューブを配置するための開発支援ツール.
     /// </summary>
-    [MenuItem("Tools/Interactive Cube Placer")]
-    public static void ShowWindow()
+    /// <remarks>
+    /// 【このツールを作った理由】
+    /// VRChatワールド開発では、テスト用のオブジェクトを素早く配置する必要が頻繁にあります.
+    /// 毎回手動でキューブを作成し、位置をリセットするのは面倒なので、
+    /// ワンクリックで原点に配置できるツールを作成しました.
+    ///
+    /// 【Unity エディタ拡張とは】
+    /// Unity エディタ拡張は、Unity エディタ自体に機能を追加する仕組みです.
+    /// ゲーム実行時ではなく、開発中のエディタ上でのみ動作します.
+    /// そのため、ビルドされたVRChatワールドには含まれません.
+    ///
+    /// 【EditorWindow を継承する理由】
+    /// EditorWindow クラスを継承することで、Unity のメニューバーに
+    /// 独自のメニュー項目を追加できます.これにより、開発効率が向上します.
+    /// </remarks>
+    public class SimpleObjectPlacerWindow : EditorWindow
     {
-        window = GetWindow<SimpleObjectPlacerWindow>("Interactive Cube Placer");
-        window.Show();
+        /// <summary>
+        /// Unity エディタのメニューバーに「Place Cube At Origin」を追加し、
+        /// クリック時に原点にキューブを配置する.
+        /// </summary>
+        /// <remarks>
+        /// 【MenuItem 属性の役割】
+        /// [MenuItem("Tools/Place Cube At Origin")] により、
+        /// Unity エディタの上部メニューバーに「Tools」メニューを作成し、
+        /// その中に「Place Cube At Origin」という項目を追加します.
+        ///
+        /// 【static メソッドである理由】
+        /// MenuItem 属性を使用するメソッドは static である必要があります.
+        /// これは、インスタンスを作成せずにメニューから直接呼び出すためです.
+        ///
+        /// 【実行の流れ】
+        /// 1. ユーザーがメニューバーの「Tools」→「Place Cube At Origin」をクリック
+        /// 2. このメソッドが自動的に呼び出される
+        /// 3. キューブが原点に生成される
+        /// 4. 生成されたキューブが選択状態になる.
+        /// </remarks>
+        [MenuItem("Tools/Place Cube At Origin")]
+        public static void PlaceCubeAtOrigin()
+        {
+            // ========== キューブの生成 ==========
+            // GameObject.CreatePrimitive は Unity が提供する基本形状を生成するメソッド
+            // PrimitiveType.Cube を指定することで、1x1x1 サイズのキューブを作成
+            // なぜキューブを選んだか：最も基本的な形状で、衝突判定のテストなどに便利なため
+            GameObject newObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            // 生成したオブジェクトに分かりやすい名前を設定
+            // デフォルトでは "Cube" という名前になるが、
+            // このツールで配置したことが分かるように "PlacedCube" に変更
+            newObject.name = "PlacedCube";
+
+            // ========== Transform の設定 ==========
+            // Transform は Unity のすべてのゲームオブジェクトが持つコンポーネントで、
+            // 位置（position）、回転（rotation）、大きさ（scale）を管理します
+
+            // 位置を原点（0, 0, 0）に設定
+            // Vector3.zero は new Vector3(0, 0, 0) の省略形
+            // VRChat ワールドでは原点が重要な基準点となるため、ここに配置
+            newObject.transform.position = Vector3.zero;
+
+            // 回転をリセット（回転なし）
+            // Quaternion.identity は「回転なし」を表す特別な値
+            // 初心者向け説明：オブジェクトがまっすぐ正面を向いている状態
+            newObject.transform.rotation = Quaternion.identity;
+
+            // 大きさを標準サイズ（1, 1, 1）に設定
+            // Vector3.one は new Vector3(1, 1, 1) の省略形
+            // これにより、キューブは 1メートル × 1メートル × 1メートル のサイズになる
+            newObject.transform.localScale = Vector3.one;
+
+            // ========== エディタ機能との統合 ==========
+
+            // Undo（元に戻す）機能への対応
+            // Ctrl+Z でこの操作を取り消せるようにする
+            // "Place Cube At Origin" は Undo 履歴に表示される操作名
+            Undo.RegisterCreatedObjectUndo(newObject, "Place Cube At Origin");
+
+            // 生成したオブジェクトを選択状態にする
+            // これにより、インスペクターウィンドウに詳細が表示され、
+            // すぐに編集を開始できる
+            Selection.activeGameObject = newObject;
+
+            // オブジェクトを「変更済み」としてマーク
+            // これにより、シーンの保存時に確実に保存される
+            // Unity はこのマークがないと、変更を検知できない場合がある
+            EditorUtility.SetDirty(newObject);
+
+            // コンソールウィンドウにメッセージを表示
+            // 開発者に操作が成功したことを通知
+            Debug.Log("Cubeを原点に配置しました");
+        }
     }
 }

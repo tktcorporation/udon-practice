@@ -113,3 +113,6 @@ dotnet_code_quality_unused_parameters = all:warning
 dotnet_diagnostic.IDE0051.severity = none # Remove unused private members (Unity SerializeField)
 dotnet_diagnostic.CS0649.severity = none # Field is never assigned (Unity SerializeField)
 dotnet_diagnostic.IDE0044.severity = none # Make field readonly (Unity SerializeField)
+
+# StyleCop Analyzers
+dotnet_diagnostic.SA1633.severity = none # File header is missing or not located at the top of the file
