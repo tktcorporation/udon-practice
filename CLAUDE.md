@@ -60,6 +60,10 @@ mise install
 - **Play Mode Testing**: Use Unity's Play mode with VRChat ClientSim for local testing
 - **Build VRChat World**: File → Build Settings → Build (requires VRChat SDK panel configuration)
 
+### Code Quality
+- **Lint Check**: Run `mise lint` before committing changes
+- **Task Completion**: Always ensure `mise lint` passes when completing any development task
+
 ### Git Operations
 - The repository has a comprehensive `.gitignore` for Unity/VRChat development
 - Unity meta files are tracked (required for Unity projects)
@@ -105,6 +109,7 @@ namespace UdonSharp.Examples.Utilities
 
 ## Development Notes
 
+- **IMPORTANT**: Always run `mise lint` and ensure it passes before marking any task as complete
 - Always test multiplayer functionality with ClientSim
 - Performance is critical for VR - optimize draw calls and polygon counts
 - Use Unity Profiler for performance analysis
