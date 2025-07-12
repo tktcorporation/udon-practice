@@ -1,4 +1,0 @@
--nullable:enable
--warnaserror-
--analyzer:Packages/com.unity.ide.visualstudio/Editor/Messaging/Analyzers/Microsoft.Unity.Analyzers.dll
--additionalfile:.editorconfig
