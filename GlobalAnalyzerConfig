@@ -1,0 +1,24 @@
+is_global = true
+
+# Unity specific suppressions
+dotnet_diagnostic.IDE0051.severity = none
+dotnet_diagnostic.CS0649.severity = none
+dotnet_diagnostic.IDE0044.severity = none
+
+# Unity Analyzers
+dotnet_diagnostic.UNT0001.severity = warning
+dotnet_diagnostic.UNT0002.severity = warning
+dotnet_diagnostic.UNT0003.severity = warning
+dotnet_diagnostic.UNT0004.severity = warning
+dotnet_diagnostic.UNT0005.severity = warning
+dotnet_diagnostic.UNT0006.severity = warning
+dotnet_diagnostic.UNT0007.severity = warning
+dotnet_diagnostic.UNT0008.severity = warning
+dotnet_diagnostic.UNT0009.severity = warning
+dotnet_diagnostic.UNT0010.severity = warning
+dotnet_diagnostic.UNT0011.severity = warning
+
+# StyleCop rules
+dotnet_diagnostic.SA1633.severity = none # File header
+dotnet_diagnostic.SA1600.severity = none # Documentation
+dotnet_diagnostic.SA1401.severity = none # Public fields (Unity uses them)

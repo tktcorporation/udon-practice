@@ -3,7 +3,37 @@
 # Unity 2022.3 requires .NET 6.0 SDK for development
 "vfox:version-fox/vfox-dotnet" = "6"
 
-node = "22.17.0"  # LTS version (Jod)
+node = "24"
 "npm:openupm-cli" = "latest"
 "npm:@anthropic-ai/claude-code" = "latest"
 "npm:@upstash/context7-mcp" = "latest"
+
+[tasks.lint]
+description = "Run Unity C# code analysis (simple)"
+run = "powershell -ExecutionPolicy Bypass -File unity-lint.ps1"
+
+[tasks."lint:roslyn"]
+description = "Run Unity C# code analysis with Roslyn Analyzers"
+run = "powershell -ExecutionPolicy Bypass -File unity-roslyn-lint.ps1"
+
+[tasks."lint:full"]
+description = "Run full code analysis with Roslyn Analyzers"
+alias = "lint:roslyn"
+
+[tasks.analyze]
+description = "Alias for lint task"
+alias = "lint"
+
+[tasks.check]
+description = "Run all checks"
+depends = ["lint"]
+
+[tasks.format]
+description = "Format C# code according to .editorconfig"
+run = """
+echo "Formatting C# files..."
+echo "Note: For Unity projects, use your IDE's format feature"
+echo "Visual Studio: Ctrl+K, Ctrl+D"
+echo "Rider: Ctrl+Alt+L"
+echo "VS Code: Shift+Alt+F"
+"""
